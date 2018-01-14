@@ -7,7 +7,7 @@ var bodyParser = require('body-parser')
 var ejs = require('ejs')
 var index = require('./routes/index')
 var users = require('./routes/users')
-
+var goods = require('./routes/good')
 var app = express()
 
 // view engine setup
@@ -23,8 +23,24 @@ app.use(bodyParser.urlencoded({ extended: false }))
 app.use(cookieParser())
 app.use(express.static(path.join(__dirname, 'public')))
 
+app.use(function (req, res, next) {
+  if (req.cookies.userId) {
+    next()
+  } else {
+    if (req.originalUrl === '/api/users/login' || req.originalUrl === '/api/users/logout' || req.path === '/api/goods/list') {
+      next()
+    } else {
+      res.json({
+        status: '10001',
+        msg: '当前未登录',
+        result: ''
+      })
+    }
+  }
+})
 app.use('/api/', index)
 app.use('/api/users', users)
+app.use('/api/goods', goods)
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
