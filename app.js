@@ -27,9 +27,10 @@ app.use(function (req, res, next) {
   if (req.cookies.userId) {
     next()
   } else {
-    if (req.originalUrl === '/api/users/login' || req.originalUrl === '/api/users/logout' || req.path === '/api/goods/list') {
+    if (req.originalUrl === '/api/users/login' || req.originalUrl === '/api/users/logout' || req.path === '/api/goods/list' || req.originalUrl === '/api/users/checkLogin') {
       next()
     } else {
+      res.send(1111)
       res.json({
         status: '10001',
         msg: '当前未登录',

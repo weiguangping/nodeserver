@@ -4,7 +4,9 @@ var User = require('./../models/user')
 require('./../util/util')
 /* GET users listing. */
 router.get('/', function (req, res, next) {
-  res.render('users', { title: 'Express' })
+  res.render('users', {
+    title: 'Express'
+  })
 })
 router.get('/test', function (req, res, next) {
   res.send('test')
@@ -75,10 +77,44 @@ router.get('/checkLogin', function (req, res, next) {
     })
   }
 })
+router.get('/getCartCount', function (req, res, next) {
+  if (req.cookies && req.cookies.userId) {
+    console.log('userId:' + req.cookies.userId)
+    var userId = req.cookies.userId
+    User.findOne({
+      'userId': userId
+    }, function (err, doc) {
+      if (err) {
+        res.json({
+          status: '0',
+          msg: err.message
+        })
+      } else {
+        let cartList = doc.cartList
+        let cartCount = 0
+        cartList.map(function (item) {
+          cartCount += parseFloat(item.productNum)
+        })
+        res.json({
+          status: '0',
+          msg: '',
+          result: cartCount
+        })
+      }
+    })
+  } else {
+    res.json({
+      status: '0',
+      msg: '当前用户不存在'
+    })
+  }
+})
 // 查询当前用户的购物车数据
 router.get('/cartList', function (req, res, next) {
   let userId = req.cookies.userId
-  User.findOne({userId: userId}, function (err, doc) {
+  User.findOne({
+    userId: userId
+  }, function (err, doc) {
     if (err) {
       res.json({
         status: '1',
@@ -129,7 +165,10 @@ router.post('/cartEdit', function (req, res, next) {
   let productId = req.body.productId
   let productNum = req.body.productNum
   let checked = req.body.checked
-  User.update({'userId': userId, 'cartList.productId': productId}, {
+  User.update({
+    'userId': userId,
+    'cartList.productId': productId
+  }, {
     'cartList.$.productNum': productNum,
     'cartList.$.checked': checked
   }, function (err, doc) {
@@ -151,7 +190,9 @@ router.post('/cartEdit', function (req, res, next) {
 router.post('/editCheckAll', function (req, res, next) {
   let userId = req.cookies.userId
   let checkAll = req.body.checkAll ? '1' : '0'
-  User.findOne({userId: userId}, function (err, user) {
+  User.findOne({
+    userId: userId
+  }, function (err, user) {
     if (err) {
       res.json({
         status: '1',
@@ -185,7 +226,9 @@ router.post('/editCheckAll', function (req, res, next) {
 // 查询用户地址接口
 router.get('/addressList', function (req, res, next) {
   let userId = req.cookies.userId
-  User.findOne({userId: userId}, function (err, doc) {
+  User.findOne({
+    userId: userId
+  }, function (err, doc) {
     if (err) {
       res.json({
         status: '1',
@@ -212,7 +255,9 @@ router.post('/setDeafault', function (req, res, next) {
       result: ''
     })
   }
-  User.findOne({userId: userId}, function (err, doc) {
+  User.findOne({
+    userId: userId
+  }, function (err, doc) {
     if (err) {
       res.json({
         status: '1',
@@ -339,6 +384,53 @@ router.post('/payMent', function (req, res, next) {
           })
         }
       })
+    }
+  })
+})
+router.get('/orderDetail', function (req, res, next) {
+  let userId = req.cookies.userId
+  let orderId = req.param('orderId')
+  User.findOne({
+    userId: userId
+  }, function (err, userInfo) {
+    if (err) {
+      res.json({
+        status: '1',
+        msg: err.message,
+        result: ''
+      })
+    } else {
+      let orderList = userInfo.orderList
+      let orderTotal = 0
+      if (orderList.length > 0) {
+        orderList.map(item => {
+          if (item.orderId === orderId) {
+            orderTotal = item.orderTotal
+          }
+        })
+        if (orderTotal > 0) {
+          res.json({
+            status: '0',
+            msg: '',
+            result: {
+              orderId: orderId,
+              orderTotal: orderTotal
+            }
+          })
+        } else {
+          res.json({
+            status: '120002',
+            msg: '无此订单',
+            result: ''
+          })
+        }
+      } else {
+        res.json({
+          status: '120001',
+          msg: '当前用户未创建订单',
+          result: ''
+        })
+      }
     }
   })
 })
